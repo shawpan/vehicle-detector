@@ -4,6 +4,7 @@ import glob
 import cv2
 import numpy as np
 import ntpath
+import argparse
 
 car_img_dir = 'vehicles'
 not_car_img_dir = 'non-vehicles'
@@ -40,4 +41,10 @@ def detect_vehicles(type):
         print('Invalid type requested')
 
 if __name__ == "__main__":
-    detect_vehicles('i')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--type', help='type i/v/d')
+    args = parser.parse_args()
+    if args.type == 'd':
+        doc()
+    else:
+        detect_vehicles(args.type)
