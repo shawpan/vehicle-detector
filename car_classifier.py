@@ -129,3 +129,4 @@ class CarClassifier:
         svc = LinearSVC(max_iter=20000)
         svc.fit(x_train, y_train)
         print("Finished training.")
+        print('Test Accuracy of SVC = ', round(svc.score(x_test, y_test), 4))
