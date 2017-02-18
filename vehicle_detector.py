@@ -14,19 +14,19 @@ class VehicleDetector:
         """
         self.car_clf = classifier
         self.car_clf.fit()
-        
+
         self.windows = []
-        self.windows += get_windows(x_start_stop = (0,0),
+        self.windows += self.get_windows(x_start_stop = (0,0),
                                 y_start_stop = (400,500), xy_window = (96,96),
                                 xy_overlap = (0.75, 0.75))
-        self.windows += get_windows(x_start_stop = (0,0),
+        self.windows += self.get_windows(x_start_stop = (0,0),
                                 y_start_stop = (400,500), xy_window = (144,144),
                                 xy_overlap = (0.75, 0.75))
-        self.windows += get_windows(x_start_stop = (0,0),
+        self.windows += self.get_windows(x_start_stop = (0,0),
                                 y_start_stop = (430,580), xy_window = (192,192),
                                 xy_overlap = (0.75, 0.75))
 
-    def get_windows(x_start_stop, y_start_stop, xy_window, xy_overlap):
+    def get_windows(self, x_start_stop, y_start_stop, xy_window, xy_overlap):
         """ Get window bounding boxes
         Attr:
             x_start_stop: tuple of start and stop pixels in X direction
