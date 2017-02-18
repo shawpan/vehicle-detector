@@ -5,10 +5,14 @@ class VehicleDetector:
     """ Vehicle Detector class
     Attributes:
         windows: bounding boxes of windows
+        car_clf: car classifier
     """
-    def __init__(self):
+    def __init__(self, classifier):
         """ Initialize vehicle detector
+        Attr:
+            classifier: car classifier
         """
+        self.car_clf = classifier
         self.windows = []
         self.windows += get_windows(x_start_stop = (0,0),
                                 y_start_stop = (400,500), xy_window = (96,96),
