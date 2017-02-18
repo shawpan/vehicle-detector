@@ -122,6 +122,11 @@ class CarClassifier:
     def fit(self):
         """ Fit classifier to car and not car data
         """
+        if os.path.isfile('data.p'):
+            with open('model.p', 'rb') as data_file:
+                data = pickle.load(data_file)
+            return data['model']
+
         x_train, y_train, x_test, y_test = self.get_data()
         print('Training set : ', x_train.shape)
         print('Test set : ', x_test.shape)
@@ -130,3 +135,9 @@ class CarClassifier:
         svc.fit(x_train, y_train)
         print("Finished training.")
         print('Test Accuracy of SVC = ', round(svc.score(x_test, y_test), 4))
+        data = {
+            'model' : svc
+        };
+        with open('model.p', "wb") as data_file:
+            pickle.dump(data, data_file)
+        return svc
