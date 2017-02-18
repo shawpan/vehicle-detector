@@ -154,19 +154,18 @@ class CarClassifier:
         self.model = svc
         return self.model
 
-    def predict(self, img_path):
+    def predict(self, img):
         """ Predict car or not car
         Attr:
             img_path: path of image
         Returns:
             prediction 1/0 car/not_car
         """
-        img = cv2.imread(img_path)
         feature = self.get_feature(img)
         feature = feature.reshape(1,-1)
         scaled_feature = self.scaler.transform(feature)
-        
-        return self.model.predict(feature)
+
+        return self.model.predict(scaled_feature)
 
     def describe(self):
         """ Print classifier description
