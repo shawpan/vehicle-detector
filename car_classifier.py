@@ -132,7 +132,7 @@ class CarClassifier:
         svc.fit(x_train, y_train)
         data = {
             'model' : svc
-        };
+        }
         with open('model.p', "wb") as data_file:
             pickle.dump(data, data_file)
         self.model = svc
