@@ -125,5 +125,7 @@ class CarClassifier:
         x_train, y_train, x_test, y_test = self.get_data()
         print('Training set : ', x_train.shape)
         print('Test set : ', x_test.shape)
+        print("Training started...")
         svc = LinearSVC(max_iter=20000)
         svc.fit(x_train, y_train)
+        print("Finished training.")
