@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import ntpath
 import argparse
+from moviepy.editor import VideoFileClip
 
 car_img_dir = 'vehicles'
 not_car_img_dir = 'non-vehicles'
@@ -27,7 +28,10 @@ def detect_vehicles(type):
         sample_size = sample_size)
     vehicle_detector = VehicleDetector(classifier=car_classifier)
     if type == 'v':
-        pass
+        clip = VideoFileClip("./project_video.mp4")
+        output_video = "./output_video/project_video.mp4"
+        output_clip = clip.fl_image(vehicle_detector.process_image)
+        output_clip.write_videofile(output_video, audio=False)
     elif type == 'i':
         images = glob.glob('test_images/test*.jpg')
         for idx, fname in enumerate(images):
