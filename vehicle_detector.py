@@ -16,13 +16,13 @@ class VehicleDetector:
         self.car_clf.fit()
 
         self.windows = []
-        self.windows += self.get_windows(x_start_stop = (0,0),
+        self.windows += self.get_windows(x_start_stop = (0,1280),
                                 y_start_stop = (400,500), xy_window = (96,96),
                                 xy_overlap = (0.75, 0.75))
-        self.windows += self.get_windows(x_start_stop = (0,0),
+        self.windows += self.get_windows(x_start_stop = (0,1280),
                                 y_start_stop = (400,500), xy_window = (144,144),
                                 xy_overlap = (0.75, 0.75))
-        self.windows += self.get_windows(x_start_stop = (0,0),
+        self.windows += self.get_windows(x_start_stop = (0,1280),
                                 y_start_stop = (430,580), xy_window = (192,192),
                                 xy_overlap = (0.75, 0.75))
 
@@ -60,7 +60,7 @@ class VehicleDetector:
         # Return the list of windows
         return window_list
 
-    def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
+    def draw_boxes(self, img, bboxes, color=(0, 0, 255), thick=6):
         """ Draw boxes
         Attr:
             img: image to draw boxes on
@@ -85,9 +85,11 @@ class VehicleDetector:
             list of windows having cars
         """
         positive_windows = []
-
+        counter = 1
         for window in self.windows:
             test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
+            # cv2.imwrite('output_images/' + str(counter) + '.jpg', test_img * 255)
+            counter = counter + 1
             if self.car_clf.predict(test_img) == 1:
                 positive_windows.append(window)
         return positive_windows
@@ -102,4 +104,5 @@ class VehicleDetector:
         """
         positive_windows = self.get_positive_windows(img)
         processed_image = self.draw_boxes(img, positive_windows)
+
         return processed_image
