@@ -13,6 +13,8 @@ class VehicleDetector:
             classifier: car classifier
         """
         self.car_clf = classifier
+        self.car_clf.fit()
+        
         self.windows = []
         self.windows += get_windows(x_start_stop = (0,0),
                                 y_start_stop = (400,500), xy_window = (96,96),
@@ -75,6 +77,29 @@ class VehicleDetector:
         # Return the image copy with boxes drawn
         return imcopy
 
+    def get_positive_windows(self, img):
+        """ Get windows that have cars in it
+        Attr:
+            img: image to search within
+        Returns:
+            list of windows having cars
+        """
+        positive_windows = []
 
-    def process_image(self):
-        pass
+        for window in self.windows:
+            test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
+            if self.car_clf.predict(test_img) == 1:
+                positive_windows.append(window)
+        return positive_windows
+
+
+    def process_image(self, img):
+        """ Process image to find cars
+        Attr:
+            img: image to process
+        Returns:
+            image after drwaing boxes around cars
+        """
+        positive_windows = self.get_positive_windows(img)
+        processed_image = self.draw_boxes(img, positive_windows)
+        return processed_image
