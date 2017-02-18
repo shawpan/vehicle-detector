@@ -88,7 +88,7 @@ class VehicleDetector:
         counter = 1
         for window in self.windows:
             test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
-            # cv2.imwrite('output_images/' + str(counter) + '.jpg', test_img * 255)
+            # cv2.imwrite('output_images/' + str(counter) + '.jpg', test_img)
             counter = counter + 1
             if self.car_clf.predict(test_img) == 1:
                 positive_windows.append(window)
