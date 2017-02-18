@@ -24,6 +24,12 @@ class CarClassifier:
         self.sample_size = sample_size
 
     def get_color_hist(self, img):
+        """ Get color histogram
+        Attr:
+            img: image object
+        Returns:
+            histogram array
+        """
         hists = []
         for i in range(3):
             channel_hist = np.histogram(img[:,:,i], bins=32, range=(0,256))
@@ -31,11 +37,12 @@ class CarClassifier:
 
         return np.concatenate((hists[0], hists[1], hists[2]))
 
-
     def get_features(self, img_paths):
         """ Extract feature vector from images
         Attr:
             img_paths: list of image paths
+        Returns:
+            features vector
         """
         features = []
         for img_path in img_paths:
