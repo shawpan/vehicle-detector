@@ -15,6 +15,7 @@ class CarClassifier:
         not_car_img_dir: path to not car images
         sample_size: number of images to be used to train classifier
         model: underlying classifier model
+        scaler: feature scaler object
     """
 
     def __init__(self, car_img_dir, not_car_img_dir, sample_size):
@@ -28,6 +29,7 @@ class CarClassifier:
         self.not_car_img_dir = not_car_img_dir
         self.sample_size = sample_size
         self.model = None
+        self.scaler = None
 
     def get_color_hist(self, img):
         """ Get color histogram
@@ -43,6 +45,37 @@ class CarClassifier:
 
         return np.concatenate((hists[0], hists[1], hists[2]))
 
+    def get_feature(self, img):
+        """ Get feature of img
+        Attr:
+            img: image object
+        Returns:
+            feature vector
+        """
+        feature = []
+        color_trans_img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+        img_shape = color_trans_img.shape
+
+        # Spatial feature
+        spatial_features = cv2.resize(color_trans_img, (16,16)).ravel()
+        feature.append(spatial_features)
+        # Histogram feature
+        hist_features = self.get_color_hist(color_trans_img)
+        feature.append(hist_features)
+        # Hog feature
+        hog_features = []
+        for channel in range(img_shape[2]):
+            hog_feature = hog(color_trans_img[:,:,channel], orientations=8,
+                   pixels_per_cell=(8, 8),
+                   cells_per_block=(2, 2),
+                   transform_sqrt=True,
+                   visualise=False, feature_vector=True)
+            hog_features.append(hog_feature)
+        hog_features = np.ravel(hog_features)
+        feature.append(hog_features)
+
+        return np.concatenate(feature)
+
     def get_features(self, img_paths):
         """ Extract feature vector from images
         Attr:
@@ -52,30 +85,9 @@ class CarClassifier:
         """
         features = []
         for img_path in img_paths:
-            feature = []
             img = cv2.imread(img_path)
-            color_trans_img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-            img_shape = color_trans_img.shape
-
-            # Spatial feature
-            spatial_features = cv2.resize(color_trans_img, (16,16)).ravel()
-            feature.append(spatial_features)
-            # Histogram feature
-            hist_features = self.get_color_hist(color_trans_img)
-            feature.append(hist_features)
-            # Hog feature
-            hog_features = []
-            for channel in range(img_shape[2]):
-                hog_feature = hog(color_trans_img[:,:,channel], orientations=8,
-                       pixels_per_cell=(8, 8),
-                       cells_per_block=(2, 2),
-                       transform_sqrt=True,
-                       visualise=False, feature_vector=True)
-                hog_features.append(hog_feature)
-            hog_features = np.ravel(hog_features)
-            feature.append(hog_features)
-
-            features.append(np.concatenate(feature))
+            feature = self.get_feature(img)
+            features.append(feature)
 
         return features
 
@@ -88,6 +100,7 @@ class CarClassifier:
         if os.path.isfile('data.p'):
             with open('data.p', 'rb') as data_file:
                 data = pickle.load(data_file)
+                self.scaler = data['scaler']
             return (data['x_train'], data['y_train'], data['x_test'], data['y_test'])
 
         car_images = glob.glob(self.car_img_dir + '/**/*.png', recursive=True)
@@ -100,8 +113,8 @@ class CarClassifier:
         not_car_features = self.get_features(not_car_images)
 
         features = np.vstack((car_features, not_car_features)).astype(np.float64)
-        scaler = StandardScaler().fit(features)
-        scaled_features = scaler.transform(features)
+        self.scaler = StandardScaler().fit(features)
+        scaled_features = self.scaler.transform(features)
         labels = np.hstack((np.ones(len(car_features)), np.zeros(len(not_car_features))))
         x_train, x_test, y_train, y_test = train_test_split(
             scaled_features, labels, test_size=0.2, random_state=np.random.randint(0, 100))
@@ -110,7 +123,8 @@ class CarClassifier:
             'x_train' : x_train,
             'y_train' : y_train,
             'x_test'  : x_test,
-            'y_test'  : y_test
+            'y_test'  : y_test,
+            'scaler'  : self.scaler
         }
         # Save as a file
         with open('data.p', "wb") as data_file:
@@ -125,18 +139,34 @@ class CarClassifier:
             with open('model.p', 'rb') as data_file:
                 data = pickle.load(data_file)
                 self.model = data['model']
+                self.scaler = data['scaler']
             return self.model
 
         x_train, y_train, x_test, y_test = self.get_data()
         svc = LinearSVC(max_iter=20000)
         svc.fit(x_train, y_train)
         data = {
-            'model' : svc
+            'model' : svc,
+            'scaler' : self.scaler
         }
         with open('model.p', "wb") as data_file:
             pickle.dump(data, data_file)
         self.model = svc
         return self.model
+
+    def predict(self, img_path):
+        """ Predict car or not car
+        Attr:
+            img_path: path of image
+        Returns:
+            prediction 1/0 car/not_car
+        """
+        img = cv2.imread(img_path)
+        feature = self.get_feature(img)
+        feature = feature.reshape(1,-1)
+        scaled_feature = self.scaler.transform(feature)
+        
+        return self.model.predict(feature)
 
     def describe(self):
         """ Print classifier description
