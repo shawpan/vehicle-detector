@@ -1,3 +1,6 @@
+import numpy as np
+import cv2
+
 class VehicleDetector:
     """ Vehicle Detector class
     Attributes:
