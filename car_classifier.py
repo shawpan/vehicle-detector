@@ -14,6 +14,7 @@ class CarClassifier:
         car_img_dir: path to car images
         not_car_img_dir: path to not car images
         sample_size: number of images to be used to train classifier
+        model: underlying classifier model
     """
 
     def __init__(self, car_img_dir, not_car_img_dir, sample_size):
@@ -26,6 +27,7 @@ class CarClassifier:
         self.car_img_dir = car_img_dir
         self.not_car_img_dir = not_car_img_dir
         self.sample_size = sample_size
+        self.model = None
 
     def get_color_hist(self, img):
         """ Get color histogram
@@ -82,12 +84,10 @@ class CarClassifier:
         Returns:
             (x_train, y_train, x_test, y_test)
         """
-        print("Preparing train and test data...")
         # If data exists then return
         if os.path.isfile('data.p'):
             with open('data.p', 'rb') as data_file:
                 data = pickle.load(data_file)
-            print("Done preparing train and test data")
             return (data['x_train'], data['y_train'], data['x_test'], data['y_test'])
 
         car_images = glob.glob(self.car_img_dir + '/**/*.png', recursive=True)
@@ -115,29 +115,37 @@ class CarClassifier:
         # Save as a file
         with open('data.p', "wb") as data_file:
             pickle.dump(data, data_file)
-        print("Done preparing train and test data")
 
         return (x_train, y_train, x_test, y_test)
 
     def fit(self):
         """ Fit classifier to car and not car data
         """
-        if os.path.isfile('data.p'):
+        if os.path.isfile('model.p'):
             with open('model.p', 'rb') as data_file:
                 data = pickle.load(data_file)
-            return data['model']
+                self.model = data['model']
+            return self.model
 
         x_train, y_train, x_test, y_test = self.get_data()
-        print('Training set : ', x_train.shape)
-        print('Test set : ', x_test.shape)
-        print("Training started...")
         svc = LinearSVC(max_iter=20000)
         svc.fit(x_train, y_train)
-        print("Finished training.")
-        print('Test Accuracy of SVC = ', round(svc.score(x_test, y_test), 4))
         data = {
             'model' : svc
         };
         with open('model.p', "wb") as data_file:
             pickle.dump(data, data_file)
-        return svc
+        self.model = svc
+        return self.model
+
+    def describe(self):
+        """ Print classifier description
+        """
+        print("-------Description of classifier--------")
+        x_train, y_train, x_test, y_test = self.get_data()
+        print('Training set : ', x_train.shape)
+        print('Test set : ', x_test.shape)
+        if self.model is None :
+            print("Classifier is not trained yet")
+        else:
+            print('Test Accuracy of classifier = ', round(self.model.score(x_test, y_test), 4))
