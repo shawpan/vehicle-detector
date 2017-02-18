@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from scipy.ndimage.measurements import label
 
 class VehicleDetector:
     """ Vehicle Detector class
@@ -94,6 +95,34 @@ class VehicleDetector:
                 positive_windows.append(window)
         return positive_windows
 
+
+    def add_heat(self, heatmap, bbox_list):
+        """ Add heat according to bounding box list
+        Attr:
+            heatmap: heat map initiliazed to image size
+            bbox_list: bounding boxes
+        Returns:
+            resulted heat map image
+        """
+        # Iterate through list of bboxes
+        for box in bbox_list:
+            # Add += 1 for all pixels inside each bbox
+            # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+            heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+
+        # Return updated heatmap
+        return heatmap
+
+    def apply_threshold(self, heatmap, threshold):
+        """ Apply threshold to heat image
+        Attr:
+            heatmap: calculated heat image
+            threshold: threshold value
+        """
+        # Zero out pixels below the threshold
+        heatmap[heatmap <= threshold] = 0
+        # Return thresholded map
+        return heatmap
 
     def process_image(self, img):
         """ Process image to find cars
