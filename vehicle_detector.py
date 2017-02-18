@@ -19,13 +19,13 @@ class VehicleDetector:
         self.windows = []
         self.windows += self.get_windows(x_start_stop = (0,1280),
                                 y_start_stop = (400,500), xy_window = (96,96),
-                                xy_overlap = (0.75, 0.75))
+                                xy_overlap = (0.88, 0.80))
         self.windows += self.get_windows(x_start_stop = (0,1280),
                                 y_start_stop = (400,500), xy_window = (144,144),
-                                xy_overlap = (0.75, 0.75))
+                                xy_overlap = (0.88, 0.80))
         self.windows += self.get_windows(x_start_stop = (0,1280),
                                 y_start_stop = (430,580), xy_window = (192,192),
-                                xy_overlap = (0.75, 0.75))
+                                xy_overlap = (0.88, 0.75))
 
     def get_windows(self, x_start_stop, y_start_stop, xy_window, xy_overlap):
         """ Get window bounding boxes
@@ -162,5 +162,6 @@ class VehicleDetector:
         # Find final boxes from heatmap using label function
         labels = label(heatmap)
         processed_image = self.draw_labeled_bboxes(np.copy(img), labels)
+        # processed_image = self.draw_boxes(img, positive_windows)
 
         return processed_image
