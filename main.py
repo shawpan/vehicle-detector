@@ -26,14 +26,16 @@ def detect_vehicles(type):
     car_classifier = CarClassifier(car_img_dir=car_img_dir,
         not_car_img_dir=not_car_img_dir,
         sample_size = sample_size)
-    vehicle_detector = VehicleDetector(classifier=car_classifier)
     if type == 'v':
+        vehicle_detector = VehicleDetector(classifier=car_classifier, is_tracking = True)
         clip = VideoFileClip("./project_video.mp4")
+        # cut = clip.subclip(0.04,0.1)
         output_video = "./output_video/project_video.mp4"
         output_clip = clip.fl_image(vehicle_detector.process_image)
         output_clip.write_videofile(output_video, audio=False)
     elif type == 'i':
-        images = glob.glob('test_images/test*.jpg')
+        vehicle_detector = VehicleDetector(classifier=car_classifier)
+        images = glob.glob('test_images/*.jpg')
         for idx, fname in enumerate(images):
             print('Processing image ', idx)
             image = cv2.imread(fname)
@@ -44,10 +46,21 @@ def detect_vehicles(type):
     else:
         print('Invalid type requested')
 
+def extract_video():
+    vidcap = cv2.VideoCapture('./project_video.mp4')
+    success,image = vidcap.read()
+    count = 0
+    success = True
+    while success:
+      success,image = vidcap.read()
+      cv2.imwrite("v_images/frame%d.jpg" % count, image)
+      count += 1
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--type', help='type i/v/d')
     args = parser.parse_args()
+
     if args.type == 'd':
         doc()
     else:
