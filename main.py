@@ -6,6 +6,7 @@ import numpy as np
 import ntpath
 import argparse
 from moviepy.editor import VideoFileClip
+from scipy.ndimage.measurements import label
 
 car_img_dir = 'vehicles'
 not_car_img_dir = 'non-vehicles'
@@ -19,8 +20,30 @@ def doc():
         sample_size = sample_size)
     car_classifier.fit()
     car_classifier.describe()
-    print('Car predicted as : ',  car_classifier.predict('doc/car.png'))
-    print('NotCar predicted as : ',  car_classifier.predict('doc/notcar.png'))
+    img = cv2.imread('doc/car.png')
+    car_classifier.get_feature(img, vis=True)
+    img = cv2.imread('doc/car.png')
+    vehicle_detector = VehicleDetector(classifier=car_classifier)
+
+    img = cv2.imread('doc/test1.jpg')
+    processed_image = vehicle_detector.draw_boxes(img, vehicle_detector.windows)
+    cv2.imwrite('doc/sliding_windows.jpg', processed_image)
+
+    positive_windows = vehicle_detector.get_positive_windows(img)
+    processed_image = vehicle_detector.draw_boxes(img, positive_windows)
+    cv2.imwrite('doc/sliding_window_positives.jpg', processed_image)
+
+    heat = np.zeros_like(img[:,:,0]).astype(np.float)
+    heat = vehicle_detector.add_heat(heat,positive_windows)
+    # Apply threshold to help remove false positives
+    heat = vehicle_detector.apply_threshold(heat,4)
+    # Visualize the heatmap when displaying
+    heatmap = np.clip(heat, 0, 255)
+    cv2.imwrite('doc/heat.jpg', heat * 255)
+
+    labels = label(heatmap)
+    processed_image = vehicle_detector.draw_labeled_bboxes(np.copy(img), labels)
+    cv2.imwrite('doc/result.jpg', processed_image)
 
 def detect_vehicles(type):
     car_classifier = CarClassifier(car_img_dir=car_img_dir,
@@ -29,7 +52,6 @@ def detect_vehicles(type):
     if type == 'v':
         vehicle_detector = VehicleDetector(classifier=car_classifier, is_tracking = True)
         clip = VideoFileClip("./project_video.mp4")
-        # cut = clip.subclip(0.04,0.1)
         output_video = "./output_video/project_video.mp4"
         output_clip = clip.fl_image(vehicle_detector.process_image)
         output_clip.write_videofile(output_video, audio=False)
@@ -45,16 +67,6 @@ def detect_vehicles(type):
             cv2.imwrite(output_filename, processed_image)
     else:
         print('Invalid type requested')
-
-def extract_video():
-    vidcap = cv2.VideoCapture('./project_video.mp4')
-    success,image = vidcap.read()
-    count = 0
-    success = True
-    while success:
-      success,image = vidcap.read()
-      cv2.imwrite("v_images/frame%d.jpg" % count, image)
-      count += 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
