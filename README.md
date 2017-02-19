@@ -1,59 +1,83 @@
-##Writeup Template
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
+#Vehicle Detection and Tracking
+
+## Demo
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=Hswv-lF-zj8
+" target="_blank"><img src="http://img.youtube.com/vi/Hswv-lF-zj8/0.jpg"
+alt="Track 1" width="608" border="10" /></a>
 
 ---
 
-**Vehicle Detection Project**
-
-The goals / steps of this project are the following:
-
-* Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
-* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector. 
-* Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.
-* Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
-* Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
-* Estimate a bounding box for vehicles detected.
 
 [//]: # (Image References)
-[image1]: ./examples/car_not_car.png
-[image2]: ./examples/HOG_example.jpg
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
-[video1]: ./project_video.mp4
 
-## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
-###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
-
----
-###Writeup / README
-
-####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
-
-You're reading it!
+[car_not_car]: ./doc/car_not_car.png
+[car]: ./doc/car.png
+[hog]: ./doc/hog.jpg
+[video1]: ./output_video/project_video.mp4
 
 ###Histogram of Oriented Gradients (HOG)
 
-####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
-
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the `get_feature()` method of `CarClassifier` class in `car_classifier.py` file.  
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
-![alt text][image1]
+![Car and Nor Car][car_not_car]
 
-I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
+below is the code for extracting combined features of an image
 
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
+```python
+def get_feature(self, img):
+        """ Get feature of img
+        Attr:
+            img: image object
+        Returns:
+            feature vector
+        """
+        feature = []
+        color_trans_img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+        img_shape = color_trans_img.shape
 
+        # Spatial feature
+        spatial_features = cv2.resize(color_trans_img, (16,16)).ravel()
+        feature.append(spatial_features)
+        # Histogram feature
+        hist_features = self.get_color_hist(color_trans_img)
+        feature.append(hist_features)
+        # Hog feature
+        hog_features = []
+        for channel in range(img_shape[2]):
+            hog_feature = hog(color_trans_img[:,:,channel], orientations=8,
+                   pixels_per_cell=(8, 8),
+                   cells_per_block=(2, 2),
+                   transform_sqrt=True,
+                   visualise=False, feature_vector=True)
+            hog_features.append(hog_feature)
+        hog_features = np.ravel(hog_features)
+        feature.append(hog_features)
 
-![alt text][image2]
+        return np.concatenate(feature)
+```
+**Car and Corresponding HOG feature visualization**
 
-####2. Explain how you settled on your final choice of HOG parameters.
+**Car**
 
-I tried various combinations of parameters and...
+![car][car]
+
+**HOG Feature**
+
+![hog][hog]
+
+####2. HOG parameters.
+
+I tried various combinations of parameters and looked for experiment results in various blog posts. Finally the following parameters worked well
+
+```
+orientations=8
+pixels_per_cell=(8, 8)
+cells_per_block=(2, 2)
+transform_sqrt=True
+```
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
