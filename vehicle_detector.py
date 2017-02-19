@@ -21,13 +21,13 @@ class VehicleDetector:
 
         self.windows = []
         self.windows += self.get_windows(x_start_stop = (0,1280),
-                                y_start_stop = (400,500), xy_window = (64 * 1.5,64),
+                                y_start_stop = (400,500), xy_window = (96,64),
                                 xy_overlap = (0.9, 0.9))
         self.windows += self.get_windows(x_start_stop = (0,1280),
-                                y_start_stop = (400,500), xy_window = (128 * 1.5,128),
+                                y_start_stop = (400,500), xy_window = (192,128),
                                 xy_overlap = (0.80, 0.80))
         self.windows += self.get_windows(x_start_stop = (0,1280),
-                                y_start_stop = (430,550), xy_window = (192 * 1.5,192),
+                                y_start_stop = (430,550), xy_window = (288,192),
                                 xy_overlap = (0.5, 0.5))
 
     def get_windows(self, x_start_stop, y_start_stop, xy_window, xy_overlap):
