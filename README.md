@@ -349,5 +349,5 @@ def does_history_exist(self, centroid):
 
 ####1. The pipeline is very sensitive to region of interest and size of sliding windows. Cars that dont fit in window size returns incomplete bounding box. Also the pipeline is slower.
 
-In future further experimentation sliding windows will improve both accuracy and processing time. Also history tracking can be applied to more that one previous frames for smooth detection and discarding false positives.
+####2. In future further experimentation of sliding windows will improve both accuracy and processing time. Also history tracking can be applied to more than one previous frames for smooth detection and discarding false positives.
 
