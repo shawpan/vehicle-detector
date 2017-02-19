@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from scipy.ndimage.measurements import label
+from scipy.spatial.distance import euclidean
 
 class VehicleDetector:
     """ Vehicle Detector class
@@ -8,24 +9,26 @@ class VehicleDetector:
         windows: bounding boxes of windows
         car_clf: car classifier
     """
-    def __init__(self, classifier):
+    def __init__(self, classifier, is_tracking=False):
         """ Initialize vehicle detector
         Attr:
             classifier: car classifier
         """
+        self.frame_history = []
+        self.is_tracking = is_tracking
         self.car_clf = classifier
         self.car_clf.fit()
 
         self.windows = []
         self.windows += self.get_windows(x_start_stop = (0,1280),
-                                y_start_stop = (400,500), xy_window = (96,96),
-                                xy_overlap = (0.88, 0.80))
+                                y_start_stop = (400,500), xy_window = (64 * 1.5,64),
+                                xy_overlap = (0.9, 0.9))
         self.windows += self.get_windows(x_start_stop = (0,1280),
-                                y_start_stop = (400,500), xy_window = (144,144),
-                                xy_overlap = (0.88, 0.80))
+                                y_start_stop = (400,500), xy_window = (128 * 1.5,128),
+                                xy_overlap = (0.80, 0.80))
         self.windows += self.get_windows(x_start_stop = (0,1280),
-                                y_start_stop = (430,580), xy_window = (192,192),
-                                xy_overlap = (0.88, 0.75))
+                                y_start_stop = (430,550), xy_window = (192 * 1.5,192),
+                                xy_overlap = (0.5, 0.5))
 
     def get_windows(self, x_start_stop, y_start_stop, xy_window, xy_overlap):
         """ Get window bounding boxes
@@ -124,12 +127,19 @@ class VehicleDetector:
         # Return thresholded map
         return heatmap
 
+    def does_history_exist(self, centroid):
+        for c in self.frame_history:
+            if euclidean(c, centroid) < 10:
+                return True
+        return False
+
     def draw_labeled_bboxes(self, img, labels):
         """ Draw bounding boxes according to heat map
         Attr:
             img: image ot draw on
             labels: labels of heat map
         """
+        centroids = []
         # Iterate through all detected cars
         for car_number in range(1, labels[1]+1):
             # Find pixels with each car_number label value
@@ -139,8 +149,16 @@ class VehicleDetector:
             nonzerox = np.array(nonzero[1])
             # Define a bounding box based on min/max x and y
             bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+            centroid_x = (bbox[1][0] + bbox[0][0]) / 2.
+            centroid_y = (bbox[1][1] + bbox[0][1]) / 2.
+            centroids.append((centroid_x, centroid_y))
             # Draw the box on the image
-            cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+            if self.is_tracking:
+                if self.does_history_exist((centroid_x, centroid_y)):
+                    cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+            else:
+                cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+        self.frame_history = centroids
         # Return the image
         return img
 
@@ -156,7 +174,7 @@ class VehicleDetector:
         # Add heat to each box in box list
         heat = self.add_heat(heat,positive_windows)
         # Apply threshold to help remove false positives
-        heat = self.apply_threshold(heat,1)
+        heat = self.apply_threshold(heat,4)
         # Visualize the heatmap when displaying
         heatmap = np.clip(heat, 0, 255)
         # Find final boxes from heatmap using label function
