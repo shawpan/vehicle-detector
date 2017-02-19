@@ -286,33 +286,68 @@ def draw_labeled_bboxes(self, img, labels):
 
 ### Video Implementation
 
-####1. This is the link to video output
+####1. This is the link to video output that has been generetaed using similar pipeline used for individual images. 
 Here's a [link to my video result](./output_video/project_video.mp4)
 
 
-####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+####2. To tackle false positives and overlapping bounding boxes both heatmap calculation and history tracking is used. Heat map calculation is done in `process_image()` method. I have used `scipy.ndimage.measurements.label()` to find the final boxes after threshodling.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+```python
+heat = self.add_heat(heat,positive_windows)
+# Apply threshold to help remove false positives
+heat = self.apply_threshold(heat,4)
+# Visualize the heatmap when displaying
+heatmap = np.clip(heat, 0, 255)
 
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+def add_heat(self, heatmap, bbox_list):
+        """ Add heat according to bounding box list
+        Attr:
+            heatmap: heat map initiliazed to image size
+            bbox_list: bounding boxes
+        Returns:
+            resulted heat map image
+        """
+        # Iterate through list of bboxes
+        for box in bbox_list:
+            # Add += 1 for all pixels inside each bbox
+            # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+            heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
 
-### Here are six frames and their corresponding heatmaps:
+        # Return updated heatmap
+        return heatmap
 
-![alt text][image5]
+def apply_threshold(self, heatmap, threshold):
+        """ Apply threshold to heat image
+        Attr:
+            heatmap: calculated heat image
+            threshold: threshold value
+        """
+        # Zero out pixels below the threshold
+        heatmap[heatmap <= threshold] = 0
+        # Return thresholded map
+        return heatmap
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
-
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
+```
 
 
+**Heat map image**
+![Heat map][heatmap]
+
+Furthermore I saved the centroids of each bounding boxes found in previous frame. I used this history to determine if a bounding box around same region in the next frame is valid or invalid by its past existence. It has benn done in `does_history_exist()` method of `VehicleDetector` class. I used euclidean distance of maximum 10 pixels as a threshold for same car apperaing in two consecutive frames. Otherwise it is a false positive
+
+```
+def does_history_exist(self, centroid):
+        for c in self.frame_history:
+            if euclidean(c, centroid) < 10:
+                return True
+        return False
+```
 
 ---
 
 ###Discussion
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+####1. The pipeline is very sensitive to region of interest and size of sliding windows. Cars that dont fit in window size returns incomplete bounding box. Also the pipeline is slower.
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+In future further experimentation sliding windows will improve both accuracy and processing time. Also history tracking can be applied to more that one previous frames for smooth detection and discarding false positives.
 
