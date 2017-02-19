@@ -16,7 +16,7 @@ alt="Track 1" width="608" border="10" /></a>
 [hog]: ./doc/hog.jpg
 [video1]: ./output_video/project_video.mp4
 
-###Histogram of Oriented Gradients (HOG)
+##Histogram of Oriented Gradients (HOG)
 
 The code for this step is contained in the `get_feature()` method of `CarClassifier` class in `car_classifier.py` file.  
 
@@ -68,7 +68,7 @@ def get_feature(self, img):
 
 ![hog][hog]
 
-####2. HOG parameters.
+### HOG parameters.
 
 I tried various combinations of parameters and looked for experiment results in various blog posts. Finally the following parameters worked well
 
@@ -79,9 +79,33 @@ cells_per_block=(2, 2)
 transform_sqrt=True
 ```
 
-####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
+#### Training car classifier
 
-I trained a linear SVM using...
+I trained a linear SVM in `CarClassifier` class in `car_classifier.py` using the combined features extracted from image. The training is done in `fit()` method of `CarClassifier` class
+
+```python
+def fit(self):
+        """ Fit classifier to car and not car data
+        """
+        if os.path.isfile('model.p'):
+            with open('model.p', 'rb') as data_file:
+                data = pickle.load(data_file)
+                self.model = data['model']
+                self.scaler = data['scaler']
+            return self.model
+
+        x_train, y_train, x_test, y_test = self.get_data()
+        svc = LinearSVC(max_iter=20000)
+        svc.fit(x_train, y_train)
+        data = {
+            'model' : svc,
+            'scaler' : self.scaler
+        }
+        with open('model.p', "wb") as data_file:
+            pickle.dump(data, data_file)
+        self.model = svc
+        return self.model
+```
 
 ###Sliding Window Search
 
