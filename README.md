@@ -14,6 +14,10 @@ alt="Track 1" width="608" border="10" /></a>
 [car_not_car]: ./doc/car_not_car.png
 [car]: ./doc/car.png
 [hog]: ./doc/hog.jpg
+[sliding_window]: ./doc/sliding_windows.jpg
+[sliding_window_positives]: ./doc/sliding_window_positives.jpg
+[heatmap]: ./doc/heat.jpg
+[result]: ./doc/result.jpg
 [video1]: ./output_video/project_video.mp4
 
 ##Histogram of Oriented Gradients (HOG)
@@ -109,11 +113,24 @@ def fit(self):
 
 ###Sliding Window Search
 
-####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
+####1. Sliding winodw is determined to be larger when closer to camera and smaller for further distance. With different overlapping and region of interest. This is done in `init()` method `VehicleDetector` class in `vehicle_detector.py`.
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
+```python
+self.windows = []
+self.windows += self.get_windows(x_start_stop = (0,1280),
+                        y_start_stop = (400,500), xy_window = (96,64),
+                        xy_overlap = (0.75, 0.75))
+self.windows += self.get_windows(x_start_stop = (0,1280),
+                        y_start_stop = (400,500), xy_window = (192,128),
+                        xy_overlap = (0.75, 0.75))
+self.windows += self.get_windows(x_start_stop = (0,1280),
+                        y_start_stop = (430,550), xy_window = (192,192),
+                        xy_overlap = (0.5, 0.5))
+```
 
-![alt text][image3]
+**All sliding windows**
+
+![Sliding windows][sliding_window]
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
