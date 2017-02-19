@@ -45,7 +45,7 @@ class CarClassifier:
 
         return np.concatenate((hists[0], hists[1], hists[2]))
 
-    def get_feature(self, img):
+    def get_feature(self, img, vis=False):
         """ Get feature of img
         Attr:
             img: image object
@@ -65,11 +65,19 @@ class CarClassifier:
         # Hog feature
         hog_features = []
         for channel in range(img_shape[2]):
-            hog_feature = hog(color_trans_img[:,:,channel], orientations=8,
-                   pixels_per_cell=(8, 8),
-                   cells_per_block=(2, 2),
-                   transform_sqrt=True,
-                   visualise=False, feature_vector=True)
+            if vis:
+                hog_feature, hog_image = hog(color_trans_img[:,:,channel], orientations=8,
+                       pixels_per_cell=(8, 8),
+                       cells_per_block=(2, 2),
+                       transform_sqrt=True,
+                       visualise=True, feature_vector=True)
+                cv2.imwrite('doc/hog.jpg', hog_image * 255)
+            else:
+                hog_feature = hog(color_trans_img[:,:,channel], orientations=8,
+                       pixels_per_cell=(8, 8),
+                       cells_per_block=(2, 2),
+                       transform_sqrt=True,
+                       visualise=False, feature_vector=True)
             hog_features.append(hog_feature)
         hog_features = np.ravel(hog_features)
         feature.append(hog_features)
