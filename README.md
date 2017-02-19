@@ -335,7 +335,7 @@ def apply_threshold(self, heatmap, threshold):
 
 Furthermore I saved the centroids of each bounding boxes found in previous frame. I used this history to determine if a bounding box around same region in the next frame is valid or invalid by its past existence. It has benn done in `does_history_exist()` method of `VehicleDetector` class. I used euclidean distance of maximum 10 pixels as a threshold for same car apperaing in two consecutive frames. Otherwise it is a false positive
 
-```
+```python
 def does_history_exist(self, centroid):
         for c in self.frame_history:
             if euclidean(c, centroid) < 10:
